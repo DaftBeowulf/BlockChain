@@ -4,7 +4,6 @@ import requests
 import sys
 import json
 
-import math
 import time
 
 DIFFICULTY = 6
@@ -28,7 +27,7 @@ def proof_of_work(block):
     end_time = time.time()
     print(f"Proof validated!")
     print(
-        f"Runtime for finding proof: {math.round(end_time - start_time)} seconds")
+        f"Runtime for finding proof: {round(end_time - start_time)} seconds")
     return proof
 
 
@@ -60,7 +59,6 @@ if __name__ == '__main__':
     # Load ID
     f = open("my_id.txt", "r")
     id = f.read()
-    print("ID is", id)
     f.close()
 
     # Run forever until interrupted
@@ -73,16 +71,22 @@ if __name__ == '__main__':
             print("Error:  Non-json response")
             print("Response returned:")
             print(r)
-            break
+            continue
 
         # TODO: Get the block from `data` and use it to look for a new proof
         new_proof = proof_of_work(data['block'])
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
-        print(post_data)
 
         r = requests.post(url=node + "/mine", json=post_data)
-        data = r.json()
+        # Handle non-json response
+        try:
+            data = r.json()
+        except ValueError:
+            print("Error:  Non-json response")
+            print("Response returned:")
+            print(r)
+            continue
 
         # TODO: If the server responds with a 'message' 'New Block Forged'
         # add 1 to the number of coins mined and print it.  Otherwise,

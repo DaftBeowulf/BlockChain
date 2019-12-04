@@ -48,43 +48,14 @@ class Blockchain(object):
         :param block": <dict> Block
         "return": <str>
         """
-        # Use json.dumps to convert json into a string
-        # Use hashlib.sha256 to create a hash
-        # It requires a `bytes-like` object, which is what
-        # .encode() does.
-        # It convertes the string to bytes.
-        # We must make sure that the Dictionary is Ordered,
-        # or we'll have inconsistent hashes
-        # TODO: Create the block_string
         block_string = json.dumps(block, sort_keys=True).encode()
-        # TODO: Hash this string using sha256
         hash = hashlib.sha256(block_string).hexdigest()
-        # By itself, the sha256 function returns the hash in a raw string
-        # that will likely include escaped characters.
-        # This can be hard to read, but .hexdigest() converts the
-        # hash to a string of hexadecimal characters, which is
-        # easier to work with and understand
-        # TODO: Return the hashed block string in hexadecimal format
+
         return hash
 
     @property
     def last_block(self):
         return self.chain[-1]
-
-    # TODO DAY 1 assignment: p_o_w() to be removed from server
-    # def proof_of_work(self, block):
-    #     """
-    #     Simple Proof of Work Algorithm
-    #     Stringify the block and look for a proof.
-    #     Loop through possibilities, checking each one against `valid_proof`
-    #     in an effort to find a number that is a valid proof
-    #     :return: A valid proof for the provided block
-    #     """
-    #     block_string = json.dumps(self.last_block, sort_keys=True)
-    #     proof = 0
-    #     while self.valid_proof(block_string, proof) is False:
-    #         proof += 1
-    #     return proof
 
     @staticmethod
     def valid_proof(block_string, proof):
@@ -111,28 +82,16 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 @app.route('/mine', methods=['POST'])
 def mine():
-    # former content -- endpoint now accepts proof from client via POST
-    # instead of running on our server
-
-    # # Run the proof of work algorithm to get the next proof
-    # proof = blockchain.proof_of_work(blockchain.last_block)
-    # # Forge the new Block by adding it to the chain with the proof
-    # previous_hash = blockchain.hash(blockchain.last_block)
-    # new_block = blockchain.new_block(proof, previous_hash)
-    # response = {
-    #     'block': new_block
-    # }
-    # return jsonify(response), 200
     data = request.get_json()
-    print(f"data: {data}")
     if not data.get('proof') or not data.get('id'):
         return jsonify({'message': "Both proof and id are required"})
 
     block_string = json.dumps(blockchain.last_block, sort_keys=True)
 
     if blockchain.valid_proof(block_string, data['proof']):
-        # TODO: "Remember, a valid proof should fail for all senders except the first."
-        # # Forge the new Block by adding it to the chain with the proof
+        # a valid proof should fail for all senders except the first
+        # forge the new Block by adding it to the chain with the proof,
+        # so next time endpoint is hit, will retrieve new last_block
         previous_hash = blockchain.hash(blockchain.last_block)
         blockchain.new_block(data['proof'], previous_hash)
         return jsonify({'message': 'New Block Forged'}), 200
