@@ -5,7 +5,7 @@ from uuid import uuid4
 from flask import Flask, jsonify, request
 
 
-DIFFICULTY = 3
+DIFFICULTY = 6
 
 
 class Blockchain(object):
@@ -124,12 +124,18 @@ def mine():
     # }
     # return jsonify(response), 200
     data = request.get_json()
+    print(f"data: {data}")
     if not data.get('proof') or not data.get('id'):
         return jsonify({'message': "Both proof and id are required"})
 
     block_string = json.dumps(blockchain.last_block, sort_keys=True)
-    if blockchain.valid_proof(block_string, data.proof):
-        return jsonify({'message': 'Mining attempt successful!'}), 200
+
+    if blockchain.valid_proof(block_string, data['proof']):
+        # TODO: "Remember, a valid proof should fail for all senders except the first."
+        # # Forge the new Block by adding it to the chain with the proof
+        previous_hash = blockchain.hash(blockchain.last_block)
+        blockchain.new_block(data['proof'], previous_hash)
+        return jsonify({'message': 'New Block Forged'}), 200
     else:
         return jsonify({'message': 'Mining attempt failed'}), 406
 
@@ -146,7 +152,7 @@ def full_chain():
 @app.route('/last_block', methods=['GET'])
 def last_block():
     response = {
-        'last_block': blockchain.last_block
+        'block': blockchain.last_block
     }
     return jsonify(response), 200
 
