@@ -72,25 +72,25 @@ class Blockchain(object):
         return self.chain[-1]
 
     # TODO DAY 1 assignment: p_o_w() to be removed from server
-    def proof_of_work(self, block):
-        """
-        Simple Proof of Work Algorithm
-        Stringify the block and look for a proof.
-        Loop through possibilities, checking each one against `valid_proof`
-        in an effort to find a number that is a valid proof
-        :return: A valid proof for the provided block
-        """
-        block_string = json.dumps(self.last_block, sort_keys=True)
-        proof = 0
-        while self.valid_proof(block_string, proof) is False:
-            proof += 1
-        return proof
+    # def proof_of_work(self, block):
+    #     """
+    #     Simple Proof of Work Algorithm
+    #     Stringify the block and look for a proof.
+    #     Loop through possibilities, checking each one against `valid_proof`
+    #     in an effort to find a number that is a valid proof
+    #     :return: A valid proof for the provided block
+    #     """
+    #     block_string = json.dumps(self.last_block, sort_keys=True)
+    #     proof = 0
+    #     while self.valid_proof(block_string, proof) is False:
+    #         proof += 1
+    #     return proof
 
     @staticmethod
     def valid_proof(block_string, proof):
         """
-        Validates the Proof:  Does hash(block_string, proof) contain 3
-        leading zeroes?  Return true if the proof is valid
+        Validates the Proof:  Does hash(block_string, proof) contain 
+        DIFFICULTY number of leading zeroes?  Return true if the proof is valid
         :param block_string: <string> The stringified block to use to
         check in combination with `proof`
         :param proof: <int?> The value that when combined with the
@@ -109,17 +109,29 @@ app = Flask(__name__)
 node_identifier = str(uuid4()).replace('-', '')
 # Instantiate the Blockchain
 blockchain = Blockchain()
-@app.route('/mine', methods=['GET'])
+@app.route('/mine', methods=['POST'])
 def mine():
-    # Run the proof of work algorithm to get the next proof
-    proof = blockchain.proof_of_work(blockchain.last_block)
-    # Forge the new Block by adding it to the chain with the proof
-    previous_hash = blockchain.hash(blockchain.last_block)
-    new_block = blockchain.new_block(proof, previous_hash)
-    response = {
-        'block': new_block
-    }
-    return jsonify(response), 200
+    # former content -- endpoint now accepts proof from client via POST
+    # instead of running on our server
+
+    # # Run the proof of work algorithm to get the next proof
+    # proof = blockchain.proof_of_work(blockchain.last_block)
+    # # Forge the new Block by adding it to the chain with the proof
+    # previous_hash = blockchain.hash(blockchain.last_block)
+    # new_block = blockchain.new_block(proof, previous_hash)
+    # response = {
+    #     'block': new_block
+    # }
+    # return jsonify(response), 200
+    data = request.get_json()
+    if not data.get('proof') or not data.get('id'):
+        return jsonify({'message': "Both proof and id are required"})
+
+    block_string = json.dumps(blockchain.last_block, sort_keys=True)
+    if blockchain.valid_proof(block_string, data.proof):
+        return jsonify({'message': 'Mining attempt successful!'}), 200
+    else:
+        return jsonify({'message': 'Mining attempt failed'}), 406
 
 
 @app.route('/chain', methods=['GET'])
