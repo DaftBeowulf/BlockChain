@@ -73,6 +73,22 @@ class Blockchain(object):
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:DIFFICULTY] == "0" * DIFFICULTY
 
+    def new_transaction(self, sender, recipient, amount):
+        """
+        :param sender: <str> Address of the Recipient
+        :param recipient: <str> Address of the Recipient
+        :param amount: <int> Amount
+        :return: <int> The index of the `block` that will hold this transaction
+        """
+
+        self.current_transactions.append({
+            'sender': sender,
+            'recipient': recipient,
+            'amount': amount
+        })
+
+        return self.last_block['index']
+
 
 # Instantiate our Node
 app = Flask(__name__)
@@ -95,9 +111,29 @@ def mine():
         # so next time endpoint is hit, will retrieve new last_block
         previous_hash = blockchain.hash(blockchain.last_block)
         blockchain.new_block(data['proof'], previous_hash)
+
+        # add new transaction before returning response
+        blockchain.new_transaction('0', data['id'], 1)
         return jsonify({'message': 'New Block Forged'}), 200
     else:
         return jsonify({'message': 'Proof invalid or already submitted'}), 200
+
+
+@app.route('/transactions/new', methods=['POST'])
+def post_new_transaction():
+    data = request.get_json()
+    required = ['sender', 'recipient', 'amount']
+    if not all(val in data for val in required):
+        return jsonify({'message': "Missing values"}), 400
+
+    blockchain.new_transaction(
+        data['sender'], data['recipient'], data['amount'])
+
+    response = {
+        "block_index": blockchain.last_block['index'],
+        "block": blockchain.last_block
+    }
+    return jsonify(response), 201
 
 
 @app.route('/chain', methods=['GET'])
