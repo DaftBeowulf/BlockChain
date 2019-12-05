@@ -108,14 +108,16 @@ def mine():
     block_string = json.dumps(blockchain.last_block, sort_keys=True)
 
     if blockchain.valid_proof(block_string, data['proof']):
+        # add new transaction before generating new block
+        # gives credit to miner
+        blockchain.new_transaction('0', data['id'], 1)
+
         # a valid proof should fail for all senders except the first
         # forge the new Block by adding it to the chain with the proof,
         # so next time endpoint is hit, will retrieve new last_block
         previous_hash = blockchain.hash(blockchain.last_block)
         blockchain.new_block(data['proof'], previous_hash)
 
-        # add new transaction before returning response
-        blockchain.new_transaction('0', data['id'], 1)
         return jsonify({'message': 'New Block Forged'}), 200
     else:
         return jsonify({'message': 'Proof invalid or already submitted'}), 200
