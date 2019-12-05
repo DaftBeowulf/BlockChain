@@ -39,7 +39,13 @@ const Account = ({ walletId }) => {
       {userTxns.length ? (
         <div>
           {userTxns.map(txn => (
-            <div>
+            <div
+              style={
+                txn.recipient === walletId
+                  ? { color: "green" }
+                  : { color: "red" }
+              }
+            >
               Recipient: {txn.recipient} Sender: {txn.sender} Amount:{" "}
               {txn.amount}
             </div>

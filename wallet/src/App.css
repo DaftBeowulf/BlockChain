@@ -2,7 +2,8 @@
   text-align: center;
 }
 
-.wallet-id {
+.wallet-id,
+.account {
   background-color: lightgray;
   width: 40%;
   margin: 20px auto;
