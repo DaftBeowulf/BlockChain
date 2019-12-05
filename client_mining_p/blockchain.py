@@ -97,7 +97,7 @@ def mine():
         blockchain.new_block(data['proof'], previous_hash)
         return jsonify({'message': 'New Block Forged'}), 200
     else:
-        return jsonify({'message': 'Proof invalid or already submitted'}), 406
+        return jsonify({'message': 'Proof invalid or already submitted'}), 200
 
 
 @app.route('/chain', methods=['GET'])
