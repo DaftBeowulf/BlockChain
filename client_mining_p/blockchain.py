@@ -83,7 +83,8 @@ blockchain = Blockchain()
 @app.route('/mine', methods=['POST'])
 def mine():
     data = request.get_json()
-    if not data.get('proof') or not data.get('id'):
+    required = ['proof', 'id']
+    if not all(k in data for k in required):
         return jsonify({'message': "Both proof and id are required"})
 
     block_string = json.dumps(blockchain.last_block, sort_keys=True)
@@ -96,7 +97,7 @@ def mine():
         blockchain.new_block(data['proof'], previous_hash)
         return jsonify({'message': 'New Block Forged'}), 200
     else:
-        return jsonify({'message': 'Mining attempt failed'}), 406
+        return jsonify({'message': 'Proof invalid or already submitted'}), 406
 
 
 @app.route('/chain', methods=['GET'])
