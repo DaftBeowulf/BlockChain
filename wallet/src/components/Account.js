@@ -6,6 +6,26 @@ const port = "http://localhost:5000";
 const Account = ({ walletId }) => {
   const [userTxns, setUserTxns] = useState([]);
   const [currency, setCurrency] = useState(0);
+
+  const [page, setPage] = useState(1);
+
+  const paginate = next => {
+    // if next page would be 0, or greater than the last possible sliced priest,
+    // or if nothing is passed to paginate(), the page will not change and just return
+    // the same slice of txns
+    if (
+      page + next < 1 ||
+      page + next >= userTxns.length * page ||
+      next === undefined
+    ) {
+      next = 0;
+    } else {
+      setPage(page + next);
+    }
+
+    return userTxns.slice(page * 10 - 10, page * 10);
+  };
+
   useEffect(() => {
     const url = port + "/chain";
     axios
@@ -37,14 +57,22 @@ const Account = ({ walletId }) => {
     <div className="account">
       <h1>Current account balance: {currency} LambdaCoins</h1>
       {userTxns.length ? (
-        <div>
-          {userTxns.map(txn => (
+        <div
+          style={{
+            width: "350px",
+            margin: "0 auto",
+            padding: "0 0 0 100px",
+            textAlign: "left"
+          }}
+        >
+          {paginate().map((txn, id) => (
             <div
               style={
                 txn.recipient === walletId
                   ? { color: "green" }
                   : { color: "red" }
               }
+              key={id}
             >
               Recipient: {txn.recipient} Sender: {txn.sender} Amount:{" "}
               {txn.amount}
@@ -56,6 +84,16 @@ const Account = ({ walletId }) => {
       ) : (
         <div>Enter an ID above to see your transactions!</div>
       )}
+
+      <div className="paginate-buttons">
+        <button disabled={page === 1} onClick={() => paginate(-1)}>
+          Previous page
+        </button>
+        <div>{page}</div>
+        <button disabled={page >= userTxns / 10} onClick={() => paginate(1)}>
+          Next page
+        </button>
+      </div>
     </div>
   );
 };
